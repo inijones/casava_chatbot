@@ -192,8 +192,7 @@ export default function App() {
       <div className="shell">
         <aside className="sidebar">
           <p className="lede">
-            Answers come from reviewed public Casava pages. This is not an official Casava channel and it cannot
-            decide a claim.
+            Reviewed public pages only. Not an official Casava channel, and it cannot decide a claim.
           </p>
           <div className="status" aria-live="polite">
             <StatusLine health={health} healthError={healthError} knowledgeReady={knowledgeReady} chatReady={chatReady} />
@@ -216,8 +215,8 @@ export default function App() {
                   Ask about <span>Business Gro</span>
                 </h2>
                 <p>
-                  Eligibility, the published monthly fee, how to pay, and how to start a claim are in the reviewed
-                  pages. The policy wording is not, so coverage questions get an honest limit instead of a guess.
+                  Eligibility, the monthly fee, payment, and how to start a claim. If a public page does not say it,
+                  the answer stays limited.
                 </p>
               </section>
             ) : (
