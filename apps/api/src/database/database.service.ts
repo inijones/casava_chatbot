@@ -1,14 +1,14 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
 import { Pool, QueryResult, QueryResultRow } from 'pg';
 import { AppConfig, APP_CONFIG } from '../config';
-import { Inject } from '@nestjs/common';
+import { pgPoolConfig } from './pg-config';
 
 @Injectable()
 export class DatabaseService implements OnModuleDestroy {
   private readonly pool: Pool;
 
   constructor(@Inject(APP_CONFIG) config: AppConfig) {
-    this.pool = new Pool({ connectionString: config.databaseUrl });
+    this.pool = new Pool(pgPoolConfig(config.databaseUrl));
   }
 
   query<T extends QueryResultRow = QueryResultRow>(

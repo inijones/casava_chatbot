@@ -56,19 +56,82 @@ flood, training, and loans. That description is not the policy schedule.
 HealthCash rules on the claims page are stored separately and are not applied
 to Business Gro. No public page reviewed here states a sum insured.
 
-## Deploy
+## Deploy from GitHub
 
-1. Build the API image from the repo root with `Dockerfile`. Set
-   `DATABASE_URL`, `OPENROUTER_API_KEY`, `OPENROUTER_CHAT_MODEL`,
-   `OPENROUTER_EMBEDDING_MODEL`, `EMBEDDING_DIMENSIONS=1536`,
-   `FRONTEND_ORIGIN` (the public site origin), and `NODE_ENV=production`.
-2. Run `node scripts/migrate.mjs` as a release step, then
-   `node scripts/ingest-sources/ingest.mjs` whenever the reviewed passages change.
-   Ingestion is a CLI, not a public route.
-3. Publish `apps/web` with the root `netlify.toml`. Set
-   `VITE_API_BASE_URL` to the API's public `https` origin and redeploy.
-4. Confirm the browser calls only your API, and that `/api/health` reports
-   `chatConfigured: true` and a non-zero `knowledgeChunks`.
+Cloudflare Pages serves the website. Northflank runs the API from the
+Dockerfile. Neon stores conversations and the vectors. A push to `main`
+rebuilds the site and the API.
+
+The `knowledge/` folder is not a public URL. GitHub keeps the reviewed
+passages. The API image copies them in. One ingest command embeds
+`knowledge/reviewed/chunks.json` and writes the vectors into Neon. After
+that, each chat question reads Neon. The browser never downloads the
+knowledge files.
+
+### 1. Neon
+
+Create a project and copy the **direct** connection string, the one whose
+host does not contain `-pooler`. Leave `sslmode=require` on it. The first
+API boot runs `database/migrations/001_init.sql`, which enables `pgvector`.
+
+### 2. Northflank, connected to GitHub
+
+Create a combined service from `inijones/casava_chatbot`, branch `main`,
+build type Dockerfile, Dockerfile path `Dockerfile`. Expose port `3000`
+with a public HTTP endpoint. Health check path: `/api/health`.
+
+Environment:
+
+```text
+DATABASE_URL=postgresql://...neon.tech/neondb?sslmode=require
+OPENROUTER_API_KEY=
+OPENROUTER_CHAT_MODEL=openai/gpt-4o-mini
+OPENROUTER_EMBEDDING_MODEL=openai/text-embedding-3-small
+EMBEDDING_DIMENSIONS=1536
+FRONTEND_ORIGIN=https://your-project.pages.dev
+NODE_ENV=production
+APP_URL=https://your-project.pages.dev
+PORT=3000
+```
+
+`FRONTEND_ORIGIN` can be a comma-separated list when you add a custom domain.
+Set it to the real Pages URL, then redeploy the API so the browser is allowed
+to call it.
+
+After the first healthy deploy, open a Northflank command on that service and
+run this once:
+
+```bash
+node scripts/ingest-sources/ingest.mjs
+```
+
+Run it again only after `knowledge/reviewed/chunks.json` changes and that
+commit has been deployed. The command replaces the stored passages.
+
+### 3. Cloudflare Pages, connected to the same GitHub repo
+
+Production branch `main`. Root directory `/`. Build command:
+
+```bash
+npm run build -w web
+```
+
+Build output directory: `apps/web/dist`.
+
+Set this variable, then retry the deployment. Vite reads it at build time:
+
+```text
+VITE_API_BASE_URL=https://your-api.northflank.app
+```
+
+No trailing slash. The value is the Northflank public origin.
+
+### 4. Check
+
+Open `/api/health`. It should report `database: "up"`, `pgvector: true`,
+`chatConfigured: true`, and `knowledgeChunks` greater than zero. In the
+browser network panel, chat requests go to your Northflank origin and not to
+`openrouter.ai`.
 
 Chat requests are limited to 20 per minute per IP. Message bodies are capped
 at 2,000 characters. Long identification and card numbers are redacted before

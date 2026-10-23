@@ -25,4 +25,4 @@ COPY database database
 COPY scripts scripts
 COPY knowledge knowledge
 EXPOSE 3000
-CMD ["node", "apps/api/dist/main.js"]
+CMD ["node", "scripts/start-production.mjs"]

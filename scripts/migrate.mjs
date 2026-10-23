@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 import { loadEnv } from './load-env.mjs';
+import { pgPoolConfig } from './pg-config.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 loadEnv(root);
@@ -19,7 +20,7 @@ const files = fs
   .filter((name) => name.endsWith('.sql'))
   .sort();
 
-const client = new pg.Client({ connectionString: databaseUrl });
+const client = new pg.Client(pgPoolConfig(databaseUrl));
 await client.connect();
 
 try {
