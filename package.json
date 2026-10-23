@@ -1,0 +1,24 @@
+{
+  "name": "casava-chatbot",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Casava Business Gro public-information chatbot prototype",
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w api\" \"npm run dev -w web\"",
+    "dev:api": "npm run dev -w api",
+    "dev:web": "npm run dev -w web",
+    "build": "npm run build -w api && npm run build -w web",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "node scripts/migrate.mjs",
+    "ingest": "node scripts/ingest-sources/ingest.mjs",
+    "test": "npm run test -w api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

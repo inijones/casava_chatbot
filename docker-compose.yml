@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: casava_chatbot
+    ports:
+      - "5433:5432"
+    volumes:
+      - casava_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d casava_chatbot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  casava_pg:
